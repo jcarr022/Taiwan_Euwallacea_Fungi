@@ -1,0 +1,8 @@
+#nexus
+begin sets;
+  charset ITS_RPB1_RPB2 = 1-391  392-1752  1753-2900;
+  charset EF = 2901-3178;
+  charpartition mymodels =
+    TIM3e+I+G4: ITS_RPB1_RPB2,
+    K2P+G4: EF;
+end;

@@ -1,0 +1,14 @@
+#nexus
+begin sets;
+  charset ITS = 1-419;
+  charset TEF = 420-619;
+  charset RPB2 = 620-1365;
+  charset ACL = 1366-2290;
+  charset CAL = 2291-2688;
+  charpartition mymodels =
+    TNe+G4: ITS,
+    TNe: TEF,
+    TIM3e+G4: RPB2,
+    K2P+I: ACL,
+    HKY+F+I+G4: CAL;
+end;

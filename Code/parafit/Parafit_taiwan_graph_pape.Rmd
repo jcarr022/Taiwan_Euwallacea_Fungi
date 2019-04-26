@@ -1,0 +1,196 @@
+---
+title: "PaCo_analysis"
+author: "Joseph Carrillo"
+date: "January 19, 2019"
+output: pdf_document
+---
+
+```{r}
+library (ape)
+library(vegan)
+							### 1. PACo FUNCTION: adjustemt prior to Procrustes analysis
+PACo <- function (H.dist, P.dist, HP.bin)
+{ 
+HP.bin <- which(HP.bin > 0, arr.in=TRUE)
+H.PCo <- pcoa(H.dist, correction="cailliez")$vectors #Performs PCo of Host distances 
+P.PCo <- pcoa(P.dist, correction="cailliez")$vectors #Performs PCo of Parasite distances
+H.PCo <- H.PCo[HP.bin[,1],] #adjust Host PCo vectors 
+P.PCo <- P.PCo[HP.bin[,2],]  ##adjust Parasite PCo vectors
+list (H.PCo = H.PCo, P.PCo = P.PCo)
+}
+
+```
+
+```{r}
+setwd("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/")
+							### 2. DATA INPUT
+	#2.1 Host and parasite phylogenetic data (should be one of the following):
+		#2.1.1 Phylogenetic trees:
+TreeH <- read.nexus("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/euwallacea_graph.tre") #this function reads Newick trees
+TreeP <- read.nexus("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/graph_paco") #for Nexus trees, use read.nexus(file.choose())
+            #Compute patristic distances:
+host.D <- cophenetic (TreeH)
+para.D <- cophenetic (TreeP)
+#
+```
+
+
+
+```{r}
+#			
+	#2.2 ## Read HP: host-parasite association matrix
+		#Hosts in rows, parasites in columns. Taxa names are included in the file and should match those in tree, sequence or distance files. 
+HP <- as.matrix(read.table("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/graph_euw_table_trans_haplo_2.txt", header=TRUE)) 
+        #Sort host and parasite taxa in distance matrices to match the HP matrix:
+host.D <- host.D[rownames(HP),rownames(HP)]
+para.D <- para.D [colnames(HP), colnames(HP)]
+# parafit
+parafit(host.D,para.D,HP,nperm=999,test.links=TRUE,correction = "cailliez")
+parafit(host.D,para.D,HP,nperm=999,test.links=TRUE,correction = "lingoes")
+```
+
+```{r}
+						### 3. APPLY PACo FUNCTION  
+PACo.fit <- PACo(host.D, para.D, HP)
+HP.proc <- procrustes(PACo.fit$H.PCo, PACo.fit$P.PCo) #Procrustes Ordination 
+NLinks = sum(HP) #Number of H-P links; needed for further computations
+#
+```
+
+```{r}
+	#3.1 Plot of host and parasite ordination:
+HostX <- HP.proc$X #host ordination matrix
+ParY <- HP.proc$Yrot #parasite ordination matrix, scaled and rotated to fit HostX
+        #Plotting host and parasite ordinations
+plot(HostX, asp=1, pch=46) 
+points(ParY, pch=1)
+arrows(ParY[,1], ParY[,2], HostX[,1], HostX[,2], length=0.12, angle=15, xpd=FALSE)
+HostX <- unique(HP.proc$X) 
+ParY <- unique(HP.proc$Yrot) #unique() removes duplicated points - convenient for labelling of points below
+identify(ParY[,1], ParY[,2], rownames(ParY), offset=0.3, xpd=FALSE, cex=0.8) #interactive labelling
+identify(HostX[,1], HostX[,2], rownames(HostX),offset=0.3, xpd=TRUE, cex= 0.8)
+#
+```
+
+
+
+```{r,warning=FALSE}
+	#3.3 Contribution of individual links
+HP.ones <- which(HP > 0, arr.in=TRUE)
+SQres.jackn <- matrix(rep(NA, NLinks**2), NLinks)# empty matrix of jackknifed squared residuals
+  colnames (SQres.jackn) <- paste(rownames(HP.proc$X),rownames(HP.proc$Yrot), sep="-") #colnames identify the H-P link
+t.critical = qt(0.975,NLinks-1) #Needed to compute 95% confidence intervals.
+for(i in c(1:NLinks)) #PACo setting the ith link = 0
+{HP.ind <- HP
+HP.ind[HP.ones[i,1],HP.ones[i,2]]=0
+PACo.ind <- PACo(host.D, para.D, HP.ind)
+Proc.ind <- procrustes(PACo.ind$H.PCo, PACo.ind$P.PCo) 
+res.Proc.ind <- c(residuals(Proc.ind))
+res.Proc.ind <- append (res.Proc.ind, NA, after= i-1)
+SQres.jackn [i, ] <- res.Proc.ind	#Append residuals to matrix of jackknifed squared residuals
+} 
+SQres.jackn <- SQres.jackn**2 #Jackknifed residuals are squared
+SQres <- (residuals (HP.proc))**2 # Vector of original square residuals
+        #jackknife calculations:
+SQres.jackn <- SQres.jackn*(-(NLinks-1))
+SQres <- SQres*NLinks
+SQres.jackn <- t(apply(SQres.jackn, 1, "+", SQres)) #apply jackknife function to matrix
+phi.mean <- apply(SQres.jackn, 2, mean, na.rm = TRUE) #mean jackknife estimate per link
+phi.UCI <- apply(SQres.jackn, 2, sd, na.rm = TRUE) #standard deviation of estimates
+phi.UCI <- phi.mean + t.critical * phi.UCI/sqrt(NLinks) #upper 95% confidence interval
+        #barplot of squared jackknifed residuals
+pat.bar <- barplot(phi.mean, names.arg = " ", space = 0.25, col="white", xlab= "Host-parasite links", ylab= "Squared residuals", ylim=c(0, max(phi.UCI)), cex.lab=1.2)
+text(pat.bar, par("usr")[3] - 0.001, srt = 330, adj = 0, labels = colnames(SQres.jackn), xpd = TRUE, font = 1, cex=0.6)
+arrows(pat.bar, phi.mean, pat.bar, phi.UCI, length= 0.05, angle=90)
+abline(a=median(phi.mean), b=0, lty=2, xpd=FALSE) #draws a line across the median residual value
+#
+## end of code ##
+```
+
+Haplogroup
+
+```{r}
+setwd("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/")
+							### 2. DATA INPUT
+	#2.1 Host and parasite phylogenetic data (should be one of the following):
+		#2.1.1 Phylogenetic trees:
+TreeH <- read.nexus("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/euwallacea_pape.tre") #this function reads Newick trees
+TreeP <- read.nexus("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/pape_paco") #for Nexus trees, use read.nexus(file.choose())
+            #Compute patristic distances:
+host.D <- cophenetic (TreeH)
+para.D <- cophenetic (TreeP)
+#
+```
+
+
+
+```{r}
+#			
+	#2.2 ## Read HP: host-parasite association matrix
+		#Hosts in rows, parasites in columns. Taxa names are included in the file and should match those in tree, sequence or distance files. 
+HP <- as.matrix(read.table("C:/Users/Joe/OneDrive - email.ucr.edu/Eskalen Lab/My_Projects/Dissertation/Taiwan/Mega Analysis/Manuscript/PACO/tre files/pape_euw_table_trans_haplo_2.txt", header=TRUE)) 
+        #Sort host and parasite taxa in distance matrices to match the HP matrix:
+host.D <- host.D[rownames(HP),rownames(HP)]
+para.D <- para.D [colnames(HP), colnames(HP)]
+# parafit
+parafit(host.D,para.D,HP,nperm=999,test.links=TRUE,correction = "cailliez")
+parafit(host.D,para.D,HP,nperm=999,test.links=TRUE,correction = "lingoes")
+```
+
+```{r}
+						### 3. APPLY PACo FUNCTION  
+PACo.fit <- PACo(host.D, para.D, HP)
+HP.proc <- procrustes(PACo.fit$H.PCo, PACo.fit$P.PCo) #Procrustes Ordination 
+NLinks = sum(HP) #Number of H-P links; needed for further computations
+#
+```
+
+```{r}
+	#3.1 Plot of host and parasite ordination:
+HostX <- HP.proc$X #host ordination matrix
+ParY <- HP.proc$Yrot #parasite ordination matrix, scaled and rotated to fit HostX
+        #Plotting host and parasite ordinations
+plot(HostX, asp=1, pch=46) 
+points(ParY, pch=1)
+arrows(ParY[,1], ParY[,2], HostX[,1], HostX[,2], length=0.12, angle=15, xpd=FALSE)
+HostX <- unique(HP.proc$X) 
+ParY <- unique(HP.proc$Yrot) #unique() removes duplicated points - convenient for labelling of points below
+identify(ParY[,1], ParY[,2], rownames(ParY), offset=0.3, xpd=FALSE, cex=0.8) #interactive labelling
+identify(HostX[,1], HostX[,2], rownames(HostX),offset=0.3, xpd=TRUE, cex= 0.8)
+#
+```
+
+
+
+```{r,warning=FALSE}
+	#3.3 Contribution of individual links
+HP.ones <- which(HP > 0, arr.in=TRUE)
+SQres.jackn <- matrix(rep(NA, NLinks**2), NLinks)# empty matrix of jackknifed squared residuals
+  colnames (SQres.jackn) <- paste(rownames(HP.proc$X),rownames(HP.proc$Yrot), sep="-") #colnames identify the H-P link
+t.critical = qt(0.975,NLinks-1) #Needed to compute 95% confidence intervals.
+for(i in c(1:NLinks)) #PACo setting the ith link = 0
+{HP.ind <- HP
+HP.ind[HP.ones[i,1],HP.ones[i,2]]=0
+PACo.ind <- PACo(host.D, para.D, HP.ind)
+Proc.ind <- procrustes(PACo.ind$H.PCo, PACo.ind$P.PCo) 
+res.Proc.ind <- c(residuals(Proc.ind))
+res.Proc.ind <- append (res.Proc.ind, NA, after= i-1)
+SQres.jackn [i, ] <- res.Proc.ind	#Append residuals to matrix of jackknifed squared residuals
+} 
+SQres.jackn <- SQres.jackn**2 #Jackknifed residuals are squared
+SQres <- (residuals (HP.proc))**2 # Vector of original square residuals
+        #jackknife calculations:
+SQres.jackn <- SQres.jackn*(-(NLinks-1))
+SQres <- SQres*NLinks
+SQres.jackn <- t(apply(SQres.jackn, 1, "+", SQres)) #apply jackknife function to matrix
+phi.mean <- apply(SQres.jackn, 2, mean, na.rm = TRUE) #mean jackknife estimate per link
+phi.UCI <- apply(SQres.jackn, 2, sd, na.rm = TRUE) #standard deviation of estimates
+phi.UCI <- phi.mean + t.critical * phi.UCI/sqrt(NLinks) #upper 95% confidence interval
+        #barplot of squared jackknifed residuals
+pat.bar <- barplot(phi.mean, names.arg = " ", space = 0.25, col="white", xlab= "Host-parasite links", ylab= "Squared residuals", ylim=c(0, max(phi.UCI)), cex.lab=1.2)
+text(pat.bar, par("usr")[3] - 0.001, srt = 330, adj = 0, labels = colnames(SQres.jackn), xpd = TRUE, font = 1, cex=0.6)
+arrows(pat.bar, phi.mean, pat.bar, phi.UCI, length= 0.05, angle=90)
+abline(a=median(phi.mean), b=0, lty=2, xpd=FALSE) #draws a line across the median residual value
+#
+## end of code ##
+```

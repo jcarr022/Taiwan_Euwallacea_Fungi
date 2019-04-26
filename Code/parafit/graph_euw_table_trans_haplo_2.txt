@@ -1,0 +1,5 @@
+	G_tai_k	G_tai_2_k	G_ku	G_fl	G_tai_eu	G_eu	G_tai_e_val
+E_sp_1	1	1	1	0	1	1	0
+E_sp_5	0	0	1	0	0	0	0
+E_sp_2	0	0	0	1	0	0	0
+E_val	0	0	0	0	0	0	1

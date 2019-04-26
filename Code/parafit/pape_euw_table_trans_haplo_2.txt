@@ -1,0 +1,4 @@
+	PAPE	PAPE_og	P_sp_1_tai_2	P_sp_1_tai	P_sp_1
+E_sp_1	1	1	1	1	0
+E_sp_2	0	0	0	1	1
+E_sp_5	1	0	0	0	0

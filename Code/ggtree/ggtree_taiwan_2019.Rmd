@@ -1,0 +1,94 @@
+---
+title: "Taiwan"
+author: "Joseph Carrillo"
+date: "July 7, 2018"
+output: html_document
+---
+
+```{r include=FALSE, fig.width=15, fig.height=30}
+library("ape")
+library("ggplot2")
+library("ggtree")
+```
+
+```{r}
+#find out node numbers for annotation
+nwk <- system.file("extdata/BEAST", "Fus_all_annotated.NEX", package="treeio") 
+tree <- read.beast(nwk)
+ggtree(tree) + geom_text2(aes(subset=!isTip, label=node), hjust=-.3) + geom_tiplab()
+```
+
+```{r}
+#find out node numbers for annotation
+nwk <- system.file("extdata/BEAST", "Fus_beetle", package="treeio") 
+tree <- read.beast(nwk)
+ggtree(tree) + geom_text2(aes(subset=!isTip, label=node), hjust=-.3) + geom_tiplab()
+```
+```{r}
+#find out node numbers for annotation
+nwk <- system.file("extdata/BEAST", "Graph_BIC_annotated.NEX", package="treeio") 
+tree <- read.beast(nwk)
+ggtree(tree) + geom_text2(aes(subset=!isTip, label=node), hjust=-.3) + geom_tiplab()
+```
+```{r}
+#find out node numbers for annotation
+nwk <- system.file("extdata/BEAST", "PAPE_BIC", package="treeio") 
+tree <- read.beast(nwk)
+ggtree(tree) + geom_text2(aes(subset=!isTip, label=node), hjust=-.3) + geom_tiplab()
+```
+```{r}
+#find out node numbers for annotation
+nwk <- system.file("extdata/BEAST", "graph_zoom_annotated.NEX", package="treeio") 
+tree <- read.beast(nwk)
+ggtree(tree) + geom_text2(aes(subset=!isTip, label=node), hjust=-.3) + geom_tiplab()
+```
+
+
+
+
+
+
+
+```{r}
+library("ape")
+library("ggplot2")
+library("ggtree")
+file <- system.file("extdata/BEAST", "Fus_all_annotated.NEX", package="treeio")
+beast <- read.beast(file)
+beast
+
+cls <- list(MAT1=c("TW1", "TW15", "TW34", "TW37","TW40","TW43","TW56","TW4","TW25","UCR6395","UCR6405","UCR6408","UCR6414","UCR6417","UCR6431","UCR5557","UCR5508","UCR5509"),
+            MAT2=c("TW2","TW44","TW55","TW45","6402","5545","5526","UCR6494","UCR6411","UCR5584","UCR6402","UCR6409","UCR6430","UCR6432","UCR6436","UCR5546","UCR5513","UCR5546","UCR6394","UCR6403","UCR5475","UCR5499","UCR5494","UCR5526","UCR5545"))
+tree <- groupOTU(beast, cls)
+library("colorspace")
+p<-ggtree(tree, aes(color=group)) +
+     scale_color_manual(values=c("black", "#3399FF", "#FF3333")) + theme(legend.position="left") + geom_tiplab(size=3, align=TRUE, linesize=.5) +geom_text2(aes(x=branch, label=boot, subset=boot>=70), vjust=-.5, color='black', size=3, frontface="bold")+xlim(0, 0.11)+ geom_cladelabel(node=104, label="Fusarium sp. [AF-15] (Taiwan)", offset = 0.013, align = T,barsize = 0.55)+geom_cladelabel(node=105, label="", offset = 0.013, align = T,barsize = 0.55) +geom_cladelabel(node=103,label="F. oligoseptatum PA(USA)",offset=0.013, align = T)+geom_cladelabel(node=86,label="Fusarium sp. [AF-3] FL(USA)",offset=0.013, align = T)+geom_cladelabel(node=85,label="F. euwallaceae CA(USA)/Israel",offset=0.013, align = T)+ geom_cladelabel(node=88,label="Fusarium sp. [AF-14] (Taiwan)",offset=0.013, align = T)+geom_cladelabel(node=87, label="", offset = 0.013, align = T,barsize = 0.55)+geom_cladelabel(node=89,label="",offset=0.013, align = T)+geom_cladelabel(node=98,label="Fusarium sp. [AF-13] (Taiwan)",offset=0.013, align = T)+geom_cladelabel(node=99,label="",offset=0.013, align = T)+geom_cladelabel(node=101,label="",offset=0.013, align = T, eleme)+geom_cladelabel(node=102,label="",offset=0.013, align = T)+geom_cladelabel(node=96,label="F. kuroshium CA(USA)",offset=0.013, align = T)+geom_cladelabel(node=97,label="",offset=0.013, align = T)+geom_cladelabel(node=75,label="Fusarium sp. [AF-5] (Malaysia)", offset=.013, align = T) +geom_cladelabel(node=117,label="Fusarium sp. [AF-16] (Taiwan)",offset=0.013, align = T)+geom_cladelabel(node=122,label="",offset=0.013, align = T)+geom_cladelabel(node=116,label="",offset=0.013, align = T)+geom_cladelabel(node=118,label="",offset=0.013, align = T)+geom_cladelabel(node=119,label="",offset=0.013, align = T)+geom_cladelabel(node=120,label="",offset=0.013, align = T)+geom_cladelabel(node=132,label="F. ambrosium India/Sri Lanka",offset=0.013, align = T)+geom_cladelabel(node=133,label="",offset=0.013, align = T)+geom_cladelabel(node=129,label="Fusarium sp. [AF-7] (Australia)",offset=0.013, align = T)+geom_cladelabel(node=128,label="Fusarium sp. [AF-6] FL(USA)",offset=0.013, align = T)+geom_cladelabel(node=73,label="Fusarium sp. [AF-9] FL(USA)/Coasta Rica",offset=0.013, align = T)+geom_cladelabel(node=72,label="Fusarium sp. [AF-8] FL(USA)",offset=0.013, align = T)+geom_cladelabel(node=135,label="F. neocosmosporiellum LA (USA)/Guinea",offset=0.013, align = T)+geom_cladelabel(node=124,label="Fusarium sp. [AF-17] (Taiwan)",offset=0.013, align = T)+geom_cladelabel(node=123,label="",offset=0.013, align = T)+geom_cladelabel(node=125,label="",offset=0.013, align = T)+geom_cladelabel(node=108,label="Fusarium sp. [AF-18] (Taiwan)",offset=0.013, align = T)+geom_cladelabel(node=107,label="",offset=0.013, align = T)+geom_cladelabel(node=109,label="",offset=0.013, align = T)+geom_cladelabel(node=110,label="",offset=0.013, align = T)+geom_cladelabel(node=110,label="",offset=0.013, align = T)+geom_cladelabel(node=111,label="",offset=0.013, align = T)+geom_cladelabel(node=112,label="",offset=0.013, align = T)+geom_cladelabel(node=113,label="",offset=0.013, align = T)
+p 
+```
+#PAPE
+```{r}
+library("ape")
+library("ggplot2")
+library("ggtree")
+file <- system.file("extdata/BEAST", "PAPE_BIC", package="treeio")
+beast <- read.beast(file)
+beast
+
+library("colorspace")
+p<-ggtree(beast) + geom_tiplab(size=3, align=TRUE, linesize=.5) +geom_text2(aes(x=branch, label=boot, subset=boot>=70), vjust=-.5, color='black', size=3, frontface="bold")+xlim(0, 1.5)+ geom_cladelabel(node=24, label="", offset = 0.14, align = T,barsize = 0.55)+geom_cladelabel(node=25, label="", offset = 0.14, align = T,barsize = 0.55)+geom_cladelabel(node=29, label="", offset = 0.14, align = T,barsize = 0.55)+geom_cladelabel(node=30, label="", offset = 0.14, align = T,barsize = 0.55)+geom_cladelabel(node=32, label="", offset = 0.14, align = T,barsize = 0.55)+geom_cladelabel(node=36, label="", offset = 0.14, align = T,barsize = 0.55)+geom_cladelabel(node=37, label="", offset = 0.14, align = T,barsize = 0.55)
+```
+
+```{r}
+library("ape")
+library("ggplot2")
+library("ggtree")
+file <- system.file("extdata/BEAST", "graph_short.tre", package="treeio")
+beast <- read.beast(file)
+beast
+
+library("colorspace")
+p<-ggtree(beast) + geom_tiplab(size=3, align=TRUE, linesize=.5) +geom_text2(aes(x=branch, label=boot, subset=boot>=70), vjust=-.5, color='black', size=3, frontface="bold")+xlim(0,0.07)+ geom_cladelabel(node=33, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=42, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=41, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=37, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=39, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=48, label="", offset = 0.007, align = T,barsize = 0.55) +geom_cladelabel(node=46, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=51, label="", offset = 0.007, align = T,barsize = 0.55)+ geom_cladelabel(node=52, label="", offset = 0.06, align = T,barsize = 0.55)#+ geom_cladelabel(node=61, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=60, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=67, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=65, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=70, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=71, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=78, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=75, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=74, label="", offset = 0.06, align = T,barsize = 0.55)#+ geom_cladelabel(node=41, label="", offset = 0.06, align = T,barsize = 0.55)+ geom_cladelabel(node=75, label="", offset = 0.06, align = T,barsize = 0.55)
+p
+```
+
+
